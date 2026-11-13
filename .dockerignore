@@ -1,0 +1,7 @@
+.git
+.idea
+target
+.env
+**/.DS_Store
+README.md
+DESIGN.md

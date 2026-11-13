@@ -1,0 +1,153 @@
+
+name: phantom0
+
+services:
+
+  # ==========================================
+  # REVERSE PROXY
+  # ==========================================
+
+  nginx:
+    image: nginx:alpine
+    container_name: phantom0-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      user-service:
+        condition: service_started
+      identity-service:
+        condition: service_started
+      group-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    networks:
+      - phantom0-network
+    restart: unless-stopped
+
+  # ==========================================
+  # FRONTEND
+  # ==========================================
+
+#  web-app:
+#    build:
+#      context: .
+#      dockerfile: frontend/web-app/Dockerfile
+#    container_name: phantom0-web
+#    expose:
+#      - "8080"
+#    networks:
+#      - phantom0-network
+#    restart: unless-stopped
+
+  # ==========================================
+  # BACKEND MICROSERVICES
+  # ==========================================
+
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    container_name: phantom0-user-service
+    environment:
+      PORT: 8331
+      DATABASE_URL: ${USER_DATABASE_URL}
+    expose:
+      - "8331"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - phantom0-network
+    restart: unless-stopped
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: services/identity-service/Dockerfile
+    container_name: phantom0-identity-service
+    environment:
+      PORT: 8332
+      DATABASE_URL: ${IDENTITY_DATABASE_URL}
+    expose:
+      - "8332"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - phantom0-network
+    restart: unless-stopped
+
+  group-service:
+    build:
+      context: .
+      dockerfile: services/group-service/Dockerfile
+    container_name: phantom0-group-service
+    environment:
+      PORT: 8333
+      DATABASE_URL: ${GROUP_DATABASE_URL}
+    expose:
+      - "8333"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - phantom0-network
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: phantom0-notification-service
+    environment:
+      PORT: 8334
+    expose:
+      - "8334"
+    networks:
+      - phantom0-network
+    restart: unless-stopped
+
+  # ==========================================
+  # DATABASE
+  # ==========================================
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: phantom0-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: phantom0
+    volumes:
+      - phantom0-postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d phantom0"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - phantom0-network
+    restart: unless-stopped
+
+# ==========================================
+# NETWORKS
+# ==========================================
+
+networks:
+  phantom0-network:
+    driver: bridge
+
+# ==========================================
+# VOLUMES
+# ==========================================
+
+volumes:
+  phantom0-postgres-data:
