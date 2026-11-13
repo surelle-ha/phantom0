@@ -1,0 +1,83 @@
+http:
+  routers:
+    client:
+      rule: "PathPrefix(`/`)"
+      priority: 1
+      entryPoints: [web]
+      service: client
+    user-service:
+      rule: "Path(`/api/users`) || PathPrefix(`/api/users/`)"
+      entryPoints: [web]
+      middlewares: [user-service-strip]
+      service: user-service
+    identity-service:
+      rule: "Path(`/api/identity`) || PathPrefix(`/api/identity/`)"
+      entryPoints: [web]
+      middlewares: [identity-service-strip]
+      service: identity-service
+    group-service:
+      rule: "Path(`/api/groups`) || PathPrefix(`/api/groups/`)"
+      entryPoints: [web]
+      middlewares: [group-service-strip]
+      service: group-service
+    notification-service:
+      rule: "Path(`/api/notifications`) || PathPrefix(`/api/notifications/`)"
+      entryPoints: [web]
+      middlewares: [notification-service-strip]
+      service: notification-service
+
+  middlewares:
+    user-service-strip:
+      stripPrefix:
+        prefixes: [/api/users]
+    identity-service-strip:
+      stripPrefix:
+        prefixes: [/api/identity]
+    group-service-strip:
+      stripPrefix:
+        prefixes: [/api/groups]
+    notification-service-strip:
+      stripPrefix:
+        prefixes: [/api/notifications]
+
+  services:
+    client:
+      loadBalancer:
+        servers:
+          - url: http://client:8080
+        healthCheck:
+          path: /
+          interval: 10s
+          timeout: 3s
+    user-service:
+      loadBalancer:
+        servers:
+          - url: http://user-service:8331
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s
+    identity-service:
+      loadBalancer:
+        servers:
+          - url: http://identity-service:8332
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s
+    group-service:
+      loadBalancer:
+        servers:
+          - url: http://group-service:8333
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s
+    notification-service:
+      loadBalancer:
+        servers:
+          - url: http://notification-service:8334
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s

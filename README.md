@@ -27,10 +27,9 @@ Phantom0 follows a modular architecture consisting of three primary components:
 | Backend Framework | Axum |
 | Database | PostgreSQL |
 | ORM | SeaORM |
-| Frontend Framework | Nuxt |
-| Frontend Library | Vue.js |
+| Client Framework | Dioxus |
 | Deployment | Docker / Docker Compose |
-| Reverse Proxy | Nginx |
+| Reverse Proxy | Traefik |
 
 ## Architecture
 
@@ -99,6 +98,23 @@ The intended deployment approach uses Docker Compose to orchestrate the backend 
 git clone https://github.com/UnknownSecurity/phantom0.git
 cd phantom0
 docker compose up -d
+```
+
+The services are available through Traefik on port 80:
+
+| Service | Endpoint | Health check |
+|---|---|---|
+| User management | `/api/users/` | `/api/users/health` |
+| Identity and access | `/api/identity/` | `/api/identity/health` |
+| Groups | `/api/groups/` | `/api/groups/health` |
+| Notifications | `/api/notifications/` | `/api/notifications/health` |
+
+The Dioxus client is served at `/`.
+
+For local client development, run:
+
+```bash
+dx serve --platform web --package client
 ```
 
 Deployment instructions and configuration requirements will be documented as the project matures.

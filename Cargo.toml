@@ -3,6 +3,7 @@ resolver = "3"
 
 members = [
     "services/*",
+    "client"
 ]
 
 [workspace.package]

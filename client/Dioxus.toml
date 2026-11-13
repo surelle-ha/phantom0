@@ -1,0 +1,14 @@
+[application]
+name = "phantom0-client"
+default_platform = "web"
+
+[web.app]
+title = "Phantom0"
+
+[web.resource]
+style = []
+script = []
+
+[web.resource.dev]
+style = []
+script = []
